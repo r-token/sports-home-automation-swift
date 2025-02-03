@@ -11,7 +11,11 @@ struct GameScoresResponse: Codable {
     let inputMD5Sum: String
     let instanceId: String
     let updated_at: String
-    let games: [Game]
+    let games: [GameWrapper]
+}
+
+struct GameWrapper: Codable {
+    let game: Game
 }
 
 struct Game: Codable {
