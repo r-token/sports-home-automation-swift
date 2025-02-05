@@ -43,16 +43,10 @@ struct SportsHomeAutomationSwift: AWSProject {
                 name: "hue-remote-username-permissions-link",
                 effect: "Allow",
                 actions: ["ssm:GetParameter"],
-                resources: ["arn:aws:ssm:us-east-1:725350831613:parameter/hue-remote-username"],
-                properties: nil
-            )
-        )
-        scoreProcessor.link(
-            Link(
-                name: "hue-access-token-permissions-link",
-                effect: "Allow",
-                actions: ["ssm:GetParameter"],
-                resources: ["arn:aws:ssm:us-east-1:725350831613:parameter/hue-access-token"],
+                resources: [
+                    "arn:aws:ssm:us-east-1:725350831613:parameter/hue-remote-username",
+                    "arn:aws:ssm:us-east-1:725350831613:parameter/hue-access-token"
+                ],
                 properties: nil
             )
         )
