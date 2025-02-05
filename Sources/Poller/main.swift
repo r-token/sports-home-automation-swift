@@ -13,12 +13,8 @@ import CloudSDK
 import Foundation
 import Models
 
-struct NcaaApiCronJob: CloudwatchDetail {
-    static let name = "ncaa-api-cron-job"
-}
-
-let runtime = LambdaRuntime { (event: NcaaApiCronJob, context: LambdaContext) async throws -> Bool in
-    context.logger.info("Received cron event: \(event)")
+let runtime = LambdaRuntime { (event: SQSEvent, context: LambdaContext) async throws -> Bool in
+    context.logger.info("Received SQS event: \(event)")
 
     let apiHost = "ncaa-api.henrygd.me"
     let footballScoresUrl = "https://\(apiHost)/scoreboard/football/fbs"

@@ -28,6 +28,15 @@ let package = Package(
             ]
         ),
         .executableTarget(
+            name: "Scheduler",
+            dependencies: [
+                .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
+                .product(name: "AWSLambdaEvents", package: "swift-aws-lambda-events"),
+                .product(name: "AWSSQS", package: "aws-sdk-swift"),
+                .product(name: "CloudSDK", package: "swift-cloud")
+            ]
+        ),
+        .executableTarget(
             name: "Poller",
             dependencies: [
                 "Models",
