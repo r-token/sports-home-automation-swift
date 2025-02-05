@@ -14,19 +14,22 @@ import Foundation
 import Models
 import NIOCore
 
-let runtime = LambdaRuntime { (event: DynamoDBEvent, context: LambdaContext) -> Bool in
+let runtime = LambdaRuntime { (event: DynamoDBEvent, context: LambdaContext) async throws -> Bool in
     context.logger.info("Received DynamoDB event: \(event)")
 
     for event in event.records {
         guard let gameItem = parseDynamoEventIntoGameItem(event: event, context: context) else { continue }
 
         if tulsaWon(gameItem) {
+            context.logger.info("Tulsa won! Flashing lights...")
             try await flashTheaterLightsTulsaColors(context: context)
         }
     }
 
     return true
 }
+
+try await runtime.run()
 
 
 // MARK: ScoreProcessor Utilities
@@ -39,8 +42,8 @@ private func parseDynamoEventIntoGameItem(event: DynamoDBEvent.EventRecord, cont
 
     guard case .string(let gameId) = newImage["gameId"],
           case .string(let sport) = newImage["sport"],
-          case .string(let tulsaScore) = newImage["tulsaScore"],
-          case .string(let opposingScore) = newImage["opposingScore"],
+          case .number(let tulsaScore) = newImage["tulsaScore"],
+          case .number(let opposingScore) = newImage["opposingScore"],
           case .string(let opposingTeam) = newImage["opposingTeam"],
           case .string(let gamePeriod) = newImage["gamePeriod"] else {
         context.logger.error("Missing or invalid attributes in DynamoDB record")
@@ -50,8 +53,8 @@ private func parseDynamoEventIntoGameItem(event: DynamoDBEvent.EventRecord, cont
     let gameItem = GameItem(
         gameId: gameId,
         sport: sport,
-        tulsaScore: tulsaScore,
-        opposingScore: opposingScore,
+        tulsaScore: Int(tulsaScore) ?? 0,
+        opposingScore: Int(opposingScore) ?? 0,
         opposingTeam: opposingTeam,
         gamePeriod: gamePeriod
     )
@@ -61,48 +64,48 @@ private func parseDynamoEventIntoGameItem(event: DynamoDBEvent.EventRecord, cont
 }
 
 private func tulsaWon(_ gameItem: GameItem) -> Bool {
-    let tulsaScore = Int(gameItem.tulsaScore) ?? 0
-    let opposingScore = Int(gameItem.opposingScore) ?? 0
+    let tulsaScore = gameItem.tulsaScore
+    let opposingScore = gameItem.opposingScore
     let gameIsOver = gameItem.gamePeriod == "FINAL"
 
     return gameIsOver && tulsaScore > opposingScore
 }
 
 private func flashTheaterLightsTulsaColors(context: LambdaContext) async throws {
-    guard let hueBridgeIp = try await getSSMParameterValue(parameterName: "hue-bridge-ip-address", context: context) else { return }
-    guard let hueUsername = try await getSSMParameterValue(parameterName: "hue-username", context: context) else { return }
+    guard let hueRemoteUsername = try await getSSMParameterValue(parameterName: "hue-remote-username", context: context) else { return }
+    guard let hueAccessToken = try await getSSMParameterValue(parameterName: "hue-access-token", context: context) else { return }
 
-    try await turnTheaterLights(.gold, hueBridgeIp: hueBridgeIp, hueUsername: hueUsername, context: context)
+    try await turnTheaterLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.blue, hueBridgeIp: hueBridgeIp, hueUsername: hueUsername, context: context)
+    try await turnTheaterLights(.blue, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.red, hueBridgeIp: hueBridgeIp, hueUsername: hueUsername, context: context)
+    try await turnTheaterLights(.red, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.gold, hueBridgeIp: hueBridgeIp, hueUsername: hueUsername, context: context)
+    try await turnTheaterLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.blue, hueBridgeIp: hueBridgeIp, hueUsername: hueUsername, context: context)
+    try await turnTheaterLights(.blue, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.red, hueBridgeIp: hueBridgeIp, hueUsername: hueUsername, context: context)
+    try await turnTheaterLights(.red, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.gold, hueBridgeIp: hueBridgeIp, hueUsername: hueUsername, context: context)
+    try await turnTheaterLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.blue, hueBridgeIp: hueBridgeIp, hueUsername: hueUsername, context: context)
+    try await turnTheaterLights(.blue, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.red, hueBridgeIp: hueBridgeIp, hueUsername: hueUsername, context: context)
+    try await turnTheaterLights(.red, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.gold, hueBridgeIp: hueBridgeIp, hueUsername: hueUsername, context: context)
+    try await turnTheaterLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.blue, hueBridgeIp: hueBridgeIp, hueUsername: hueUsername, context: context)
+    try await turnTheaterLights(.blue, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
 }
 
 private func getSSMParameterValue(parameterName: String, context: LambdaContext) async throws -> String? {
@@ -125,16 +128,17 @@ private func getSSMParameterValue(parameterName: String, context: LambdaContext)
     }
 }
 
-private func turnTheaterLights(_ color: TulsaColor, hueBridgeIp: String, hueUsername: String, context: LambdaContext) async throws {
+private func turnTheaterLights(_ color: TulsaColor, hueUsername: String, hueAccessToken: String, context: LambdaContext) async throws {
     await withThrowingTaskGroup(of: Void.self) { group in
-        for lightNumber in 7...9 {
+        for lightNumber in [4, 7, 8, 9] { // emma's lamp & theater lights
             group.addTask {
                 let hueBody = buildHueBody(for: color)
-                let url = "http://\(hueBridgeIp)/api/\(hueUsername)/lights/\(lightNumber)/state"
+                let url = "https://api.meethue.com/bridge/\(hueUsername)/lights/4/state"
 
                 var request = HTTPClientRequest(url: url)
                 request.method = .PUT
                 request.headers.add(name: "Content-Type", value: "application/json; charset=utf-8")
+                request.headers.add(name: "Authorization", value: "Bearer \(hueAccessToken)")
 
                 do {
                     let jsonData = try JSONSerialization.data(withJSONObject: hueBody)

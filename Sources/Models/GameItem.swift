@@ -8,12 +8,12 @@
 public struct GameItem: Codable {
     public let gameId: String
     public let sport: String
-    public let tulsaScore: String
-    public let opposingScore: String
+    public let tulsaScore: Int
+    public let opposingScore: Int
     public let opposingTeam: String
     public let gamePeriod: String
 
-    public init(gameId: String, sport: String, tulsaScore: String, opposingScore: String, opposingTeam: String, gamePeriod: String) {
+    public init(gameId: String, sport: String, tulsaScore: Int, opposingScore: Int, opposingTeam: String, gamePeriod: String) {
         self.gameId = gameId
         self.sport = sport
         self.tulsaScore = tulsaScore

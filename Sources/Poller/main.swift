@@ -9,6 +9,7 @@ import AsyncHTTPClient
 import AWSDynamoDB
 import AWSLambdaRuntime
 import AWSLambdaEvents
+import CloudSDK
 import Foundation
 import Models
 
@@ -37,7 +38,7 @@ let runtime = LambdaRuntime { (event: NcaaApiCronJob, context: LambdaContext) as
         let footballScores = try await getScores(url: footballScoresUrl, sport: .cfb, context: context)
         if let scores = footballScores {
             if let tulsaFootballGame = getTulsaGameFromAPI(scores: scores) {
-                context.logger.info("Found Tulsa football game: \(tulsaFootballGame)")
+                context.logger.info("Found Tulsa football game: \(tulsaFootballGame.title)")
                 try await writeGameStatusToDynamoDB(tulsaGame: tulsaFootballGame, sport: .cfb, context: context)
             } else {
                 context.logger.info("Tulsa FB is not playing right now")
@@ -49,7 +50,7 @@ let runtime = LambdaRuntime { (event: NcaaApiCronJob, context: LambdaContext) as
         context.logger.info("Checking basketball scores...")
         if let mensBasketballScores = try await getScores(url: mensBasketballScoresUrl, sport: .mbb, context: context) {
             if let tulsaMbbGame = getTulsaGameFromAPI(scores: mensBasketballScores) {
-                context.logger.info("Found Tulsa men's basketball game: \(tulsaMbbGame)")
+                context.logger.info("Found Tulsa men's basketball game: \(tulsaMbbGame.title)")
                 try await writeGameStatusToDynamoDB(tulsaGame: tulsaMbbGame, sport: .mbb, context: context)
             } else {
                 context.logger.info("Tulsa MBB is not playing right now")
@@ -58,7 +59,7 @@ let runtime = LambdaRuntime { (event: NcaaApiCronJob, context: LambdaContext) as
 
         if let womensBasketballScores = try await getScores(url: womensBasketballScoresUrl, sport: .wbb, context: context) {
             if let tulsaWbbGame = getTulsaGameFromAPI(scores: womensBasketballScores) {
-                context.logger.info("Found Tulsa women's basketball game: \(tulsaWbbGame)")
+                context.logger.info("Found Tulsa women's basketball game: \(tulsaWbbGame.title)")
                 try await writeGameStatusToDynamoDB(tulsaGame: tulsaWbbGame, sport: .wbb, context: context)
             } else {
                 context.logger.info("Tulsa WBB is not playing right now")
@@ -115,8 +116,9 @@ private func getTulsaGameFromAPI(scores: GameScoresResponse) -> Game? {
 }
 
 private func writeGameStatusToDynamoDB(tulsaGame: Game, sport: Sport, context: LambdaContext) async throws {
+    let scoresTableName = Cloud.env("DYNAMODB_SCORES_NAME")
     let ddbConfig = try await DynamoDBClient.DynamoDBClientConfiguration(
-        region: "us-east-1"  // replace with your region
+        region: "us-east-1"
     )
     let ddbClient = DynamoDBClient(config: ddbConfig)
 
@@ -138,8 +140,8 @@ private func writeGameStatusToDynamoDB(tulsaGame: Game, sport: Sport, context: L
     let gameItem = GameItem(
         gameId: tulsaGame.gameID,
         sport: sport.rawValue,
-        tulsaScore: tulsaScore,
-        opposingScore: opposingScore,
+        tulsaScore: Int(tulsaScore) ?? 0,
+        opposingScore: Int(opposingScore) ?? 0,
         opposingTeam: opposingTeam,
         gamePeriod: tulsaGame.currentPeriod
     )
@@ -148,8 +150,8 @@ private func writeGameStatusToDynamoDB(tulsaGame: Game, sport: Sport, context: L
     let dynamoItem: [String: DynamoDBClientTypes.AttributeValue] = [
         "gameId": .s(gameItem.gameId),
         "sport": .s(gameItem.sport),
-        "tulsaScore": .n(gameItem.tulsaScore),
-        "opposingScore": .n(gameItem.opposingScore),
+        "tulsaScore": .n(String(gameItem.tulsaScore)),
+        "opposingScore": .n(String(gameItem.opposingScore)),
         "opposingTeam": .s(gameItem.opposingTeam),
         "gamePeriod": .s(gameItem.gamePeriod)
     ]
@@ -157,7 +159,7 @@ private func writeGameStatusToDynamoDB(tulsaGame: Game, sport: Sport, context: L
 
     let ddbInput = PutItemInput(
         item: dynamoItem,
-        tableName: "Scores"
+        tableName: scoresTableName
     )
 
     do {

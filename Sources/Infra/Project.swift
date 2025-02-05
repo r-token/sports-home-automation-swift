@@ -37,6 +37,26 @@ struct SportsHomeAutomationSwift: AWSProject {
         ncaaApiPoller.link(scoresTable) // API poller Lambda has write permissions on the 'Scores' DynamoDB table
         scoresTable.subscribe(scoreProcessor) // 'Scores' DynamoDB table streams NEW_IMAGE change events to scoreProcessor Lambda
 
+        // getParameter permissions for hue-remote-username & hue-access-token
+        scoreProcessor.link(
+            Link(
+                name: "hue-remote-username-permissions-link",
+                effect: "Allow",
+                actions: ["ssm:GetParameter"],
+                resources: ["arn:aws:ssm:us-east-1:725350831613:parameter/hue-remote-username"],
+                properties: nil
+            )
+        )
+        scoreProcessor.link(
+            Link(
+                name: "hue-access-token-permissions-link",
+                effect: "Allow",
+                actions: ["ssm:GetParameter"],
+                resources: ["arn:aws:ssm:us-east-1:725350831613:parameter/hue-access-token"],
+                properties: nil
+            )
+        )
+
         return Outputs([
             "cron-job-name": cron.name,
             "ncaa-poller-function-name": ncaaApiPoller.name,
