@@ -177,7 +177,7 @@ private func buildHueBody(for color: TulsaColor) -> [String: Any] {
     case .blue:
         hueBody = [
             "on": true,
-            "hue": 40018,
+            "hue": 46000,
             "sat": 254,
             "bri": 254
         ]
