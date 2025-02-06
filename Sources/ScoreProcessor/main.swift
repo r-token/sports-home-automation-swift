@@ -9,10 +9,10 @@ import AsyncHTTPClient
 import AWSDynamoDB
 import AWSLambdaEvents
 import AWSLambdaRuntime
-import AWSSSM
 import Foundation
 import Models
 import NIOCore
+import Utils
 
 let runtime = LambdaRuntime { (event: DynamoDBEvent, context: LambdaContext) async throws -> Bool in
     context.logger.info("Received DynamoDB event: \(event)")
@@ -118,26 +118,6 @@ private func flashTheaterLightsTulsaColors(context: LambdaContext) async throws 
     try await turnTheaterLights(.red, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
 
     try await turnTheaterLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
-}
-
-private func getSSMParameterValue(parameterName: String, context: LambdaContext) async throws -> String? {
-    let config = try await SSMClient.SSMClientConfiguration(region: "us-east-1")
-    let ssmClient = SSMClient(config: config)
-    let input = GetParameterInput(name: parameterName)
-
-    do {
-        let response = try await ssmClient.getParameter(input: input)
-        guard let parameterValue = response.parameter?.value else {
-            context.logger.error("Parameter value for \(input.name ?? "nil") is nil")
-            return nil
-        }
-
-        context.logger.info("Retrieved parameter value: \(parameterValue)")
-        return parameterValue
-    } catch {
-        context.logger.error("Error fetching parameter \(parameterName): \(error)")
-        return nil
-    }
 }
 
 private func turnTheaterLights(_ color: TulsaColor, hueUsername: String, hueAccessToken: String, context: LambdaContext) async throws {

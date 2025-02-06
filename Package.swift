@@ -6,7 +6,10 @@ import PackageDescription
 let package = Package(
     name: "sports-home-automation-swift",
     platforms: [.macOS(.v15)],
-    products: [.library(name: "Models", targets: ["Models"])],
+    products: [
+        .library(name: "Models", targets: ["Models"]),
+        .library(name: "Utils", targets: ["Utils"])
+    ],
     dependencies: [
         .package(url: "https://github.com/swift-cloud/swift-cloud.git", branch: "main"),
         .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime.git", branch: "main"),
@@ -21,10 +24,27 @@ let package = Package(
             name: "Models",
             dependencies: []
         ),
+        .target(
+            name: "Utils",
+            dependencies: [
+                .product(name: "AWSSSM", package: "aws-sdk-swift"),
+                .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime")
+            ]
+        ),
         .executableTarget(
             name: "Infra",
             dependencies: [
                 .product(name: "Cloud", package: "swift-cloud")
+            ]
+        ),
+        .executableTarget(
+            name: "HueTokenRefresher",
+            dependencies: [
+                "Utils",
+                .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
+                .product(name: "AWSLambdaEvents", package: "swift-aws-lambda-events"),
+                .product(name: "AWSSSM", package: "aws-sdk-swift"),
+                .product(name: "AsyncHTTPClient", package: "async-http-client")
             ]
         ),
         .executableTarget(
@@ -51,6 +71,7 @@ let package = Package(
             name: "ScoreProcessor",
             dependencies: [
                 "Models",
+                "Utils",
                 .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
                 .product(name: "AWSLambdaEvents", package: "swift-aws-lambda-events"),
                 .product(name: "AWSSSM", package: "aws-sdk-swift"),
