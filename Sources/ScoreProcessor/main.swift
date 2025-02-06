@@ -18,9 +18,9 @@ let runtime = LambdaRuntime { (event: DynamoDBEvent, context: LambdaContext) asy
     context.logger.info("Received DynamoDB event: \(event)")
 
     for event in event.records {
-        guard let gameItem = parseDynamoEventIntoGameItem(event: event, context: context) else { continue }
+        guard let gameInfo: GameInfo = parseDynamoEventIntoGameItem(event: event, context: context) else { continue }
 
-        if tulsaWon(gameItem) {
+        if tulsaWon(gameInfo) {
             context.logger.info("Tulsa won! Flashing lights...")
             try await flashTheaterLightsTulsaColors(context: context)
         }
@@ -34,7 +34,11 @@ try await runtime.run()
 
 // MARK: ScoreProcessor Utilities
 
-private func parseDynamoEventIntoGameItem(event: DynamoDBEvent.EventRecord, context: LambdaContext) -> GameItem? {
+private func parseDynamoEventIntoGameItem(event: DynamoDBEvent.EventRecord, context: LambdaContext) -> GameInfo? {
+    guard let oldImage = event.change.oldImage else {
+        context.logger.info("No old image in record, skipping")
+        return nil
+    }
     guard let newImage = event.change.newImage else {
         context.logger.info("No new image in record, skipping")
         return nil
@@ -45,6 +49,7 @@ private func parseDynamoEventIntoGameItem(event: DynamoDBEvent.EventRecord, cont
           case .number(let tulsaScore) = newImage["tulsaScore"],
           case .number(let opposingScore) = newImage["opposingScore"],
           case .string(let opposingTeam) = newImage["opposingTeam"],
+          case .string(let oldGamePeriod) = oldImage["gamePeriod"],
           case .string(let gamePeriod) = newImage["gamePeriod"] else {
         context.logger.error("Missing or invalid attributes in DynamoDB record")
         return nil
@@ -59,16 +64,19 @@ private func parseDynamoEventIntoGameItem(event: DynamoDBEvent.EventRecord, cont
         gamePeriod: gamePeriod
     )
 
-    context.logger.info("Processed game: \(gameItem)")
-    return gameItem
+    context.logger.info("Processed gameItem: \(gameItem) and previousGamePeriod as: \(oldGamePeriod)")
+    return GameInfo(currentGame: gameItem, previousGamePeriod: oldGamePeriod)
 }
 
-private func tulsaWon(_ gameItem: GameItem) -> Bool {
-    let tulsaScore = gameItem.tulsaScore
-    let opposingScore = gameItem.opposingScore
-    let gameIsOver = gameItem.gamePeriod == "FINAL"
+private func tulsaWon(_ gameInfo: GameInfo) -> Bool {
+    let tulsaScore = gameInfo.currentGame.tulsaScore
+    let opposingScore = gameInfo.currentGame.opposingScore
+    let previousGamePeriod = gameInfo.previousGamePeriod
+    let currentGamePeriod = gameInfo.currentGame.gamePeriod
 
-    return gameIsOver && tulsaScore > opposingScore
+    let gameJustEnded = previousGamePeriod != "FINAL" && currentGamePeriod == "FINAL"
+
+    return gameJustEnded && tulsaScore > opposingScore
 }
 
 private func flashTheaterLightsTulsaColors(context: LambdaContext) async throws {
@@ -197,6 +205,10 @@ private func buildHueBody(for color: TulsaColor) -> [String: Any] {
     return hueBody
 }
 
+struct GameInfo {
+    var currentGame: GameItem
+    var previousGamePeriod: String
+}
 
 enum TulsaColor {
     case gold, blue, red

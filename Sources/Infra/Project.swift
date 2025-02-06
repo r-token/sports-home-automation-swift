@@ -36,7 +36,7 @@ struct SportsHomeAutomationSwift: AWSProject {
             primaryIndex: .init(
                 partitionKey: ("gameId", .string)
             ),
-            streaming: .enabled(viewType: .newImage)
+            streaming: .enabled(viewType: .newAndOldImages)
         )
 
         let scoreProcessor = AWS.Function(
@@ -48,7 +48,7 @@ struct SportsHomeAutomationSwift: AWSProject {
         sportsApiScheduler.link(sportsApiPollerQueue) // scheduler Lambda has write permissions to the poller SQS queue
         sportsApiPollerQueue.subscribe(sportsApiPoller) // API poller is invoked by SQS events
         sportsApiPoller.link(scoresTable) // API poller Lambda has write permissions on the 'Scores' DynamoDB table
-        scoresTable.subscribe(scoreProcessor) // 'Scores' DynamoDB table streams NEW_IMAGE change events to scoreProcessor Lambda
+        scoresTable.subscribe(scoreProcessor) // 'Scores' DynamoDB table streams NEW_AND_OLD_IMAGES change events to scoreProcessor Lambda
 
         // getParameter permissions for hue-remote-username & hue-access-token
         scoreProcessor.link(
