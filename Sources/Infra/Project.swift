@@ -66,6 +66,9 @@ struct SportsHomeAutomationSwift: AWSProject {
 
         return Outputs([
             "cron-job-name": cron.name,
+            "sports-api-scheduler-function-name": sportsApiScheduler.name,
+            "sports-api-poller-queue-name": sportsApiPollerQueue.name,
+            "sports-api-poller-queue-url": sportsApiPollerQueue.url,
             "sports-poller-function-name": sportsApiPoller.name,
             "scores-table-name": scoresTable.name,
             "score-processor-function-name": scoreProcessor.name
