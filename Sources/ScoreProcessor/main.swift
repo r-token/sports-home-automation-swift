@@ -106,6 +106,10 @@ private func flashTheaterLightsTulsaColors(context: LambdaContext) async throws 
     try await Task.sleep(for: .seconds(0.5))
 
     try await turnTheaterLights(.blue, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+
+    try await turnTheaterLights(.red, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+
+    try await turnTheaterLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
 }
 
 private func getSSMParameterValue(parameterName: String, context: LambdaContext) async throws -> String? {
@@ -184,7 +188,7 @@ private func buildHueBody(for color: TulsaColor) -> [String: Any] {
     case .red:
         hueBody = [
             "on": true,
-            "hue": 63708,
+            "hue": 65535,
             "sat": 237,
             "bri": 254
         ]
