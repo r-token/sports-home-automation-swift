@@ -56,7 +56,7 @@ struct SportsHomeAutomationSwift: AWSProject {
         // getParameter permissions for hue-remote-username & hue-access-token
         scoreProcessor.link(
             Link(
-                name: "hue-remote-username-permissions-link",
+                "hue-remote-username-token-permissions-link",
                 effect: "Allow",
                 actions: ["ssm:GetParameter"],
                 resources: [
@@ -84,7 +84,7 @@ struct SportsHomeAutomationSwift: AWSProject {
         // get and update hue access tokens
         hueTokenRefresherFunction.link(
             Link(
-                name: "hue-tokens-permissions-link",
+                "hue-tokens-permissions-link",
                 effect: "Allow",
                 actions: ["ssm:GetParameter", "ssm:PutParameter"],
                 resources: [

@@ -10,6 +10,7 @@ import AWSLambdaEvents
 import AWSSQS
 import CloudSDK
 import Foundation
+import SharedUtils
 
 struct SportsApiCronJob: CloudwatchDetail {
     static let name = "sports-api-cron-job"
@@ -17,6 +18,11 @@ struct SportsApiCronJob: CloudwatchDetail {
 
 let runtime = LambdaRuntime { (event: SportsApiCronJob, context: LambdaContext) async throws -> Bool in
     context.logger.info("Received cron event: \(event)")
+
+    guard isFootballSeason || isBasketballSeason else {
+        context.logger.info("Not currently football or basketball season, exiting")
+        return false
+    }
 
     let queueUrl = Cloud.env("QUEUE_SPORTS_API_POLLER_QUEUE_URL")
     let config = try await SQSClient.SQSClientConfiguration(region: "us-east-1")
@@ -31,7 +37,7 @@ let runtime = LambdaRuntime { (event: SportsApiCronJob, context: LambdaContext) 
 
         do {
             let response = try await sqsClient.sendMessage(input: input)
-            context.logger.info("Sent message with delay \(i * 10) seconds: \(response)")
+            context.logger.info("Sent message with delay of \(i * 10) seconds: \(response)")
         } catch {
             context.logger.error("Failed to send message: \(error)")
             return false

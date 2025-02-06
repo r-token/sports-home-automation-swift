@@ -10,8 +10,9 @@ import AWSLambdaEvents
 import AWSLambdaRuntime
 import AWSSSM
 import Foundation
+import Models
 import NIOCore
-import Utils
+import SSMUtils
 
 struct HueTokenRefresherCronJob: CloudwatchDetail {
     static let name = "hue-token-refresher-cron-job"
@@ -75,31 +76,4 @@ private func refreshHueTokens(clientId: String, clientSecret: String, refreshTok
 
     let tokenResponse = try JSONDecoder().decode(HueTokenResponse.self, from: data)
     return tokenResponse
-}
-
-private func updateSSMParameters(tokenResponse: HueTokenResponse) async throws {
-    let ssmClient = SSMClient(config: try await SSMClient.SSMClientConfiguration(region: "us-east-1"))
-
-    let accessTokenInput = PutParameterInput(
-        name: "hue-access-token",
-        overwrite: true,
-        type: .string,
-        value: tokenResponse.access_token
-    )
-
-    let refreshTokenInput = PutParameterInput(
-        name: "hue-refresh-token",
-        overwrite: true,
-        type: .string,
-        value: tokenResponse.refresh_token
-    )
-
-    _ = try await ssmClient.putParameter(input: accessTokenInput)
-    _ = try await ssmClient.putParameter(input: refreshTokenInput)
-}
-
-
-struct HueTokenResponse: Codable {
-    let access_token: String
-    let refresh_token: String
 }

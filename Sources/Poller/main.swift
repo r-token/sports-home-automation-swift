@@ -12,6 +12,7 @@ import AWSLambdaEvents
 import CloudSDK
 import Foundation
 import Models
+import SharedUtils
 
 let runtime = LambdaRuntime { (event: SQSEvent, context: LambdaContext) async throws -> Bool in
     context.logger.info("Received SQS event: \(event)")
@@ -21,11 +22,8 @@ let runtime = LambdaRuntime { (event: SQSEvent, context: LambdaContext) async th
     let mensBasketballScoresUrl = "https://\(apiHost)/scoreboard/basketball-men/d1"
     let womensBasketballScoresUrl = "https://\(apiHost)/scoreboard/basketball-women/d1"
 
-    let isFootballSeason = (8...12).contains(Date().month) || (Date().month == 1 && Date().day <= 30)
-    let isBasketballSeason = (10...12).contains(Date().month) || (1...4).contains(Date().month) && !(Date().month == 4 && Date().day > 15)
-
     guard isFootballSeason || isBasketballSeason else {
-        context.logger.info("Not currently in season, exiting")
+        context.logger.info("Not currently football or basketball season, exiting")
         return false
     }
 

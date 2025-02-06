@@ -12,7 +12,7 @@ import AWSLambdaRuntime
 import Foundation
 import Models
 import NIOCore
-import Utils
+import SSMUtils
 
 let runtime = LambdaRuntime { (event: DynamoDBEvent, context: LambdaContext) async throws -> Bool in
     context.logger.info("Received DynamoDB event: \(event)")
@@ -114,10 +114,13 @@ private func flashTheaterLightsTulsaColors(context: LambdaContext) async throws 
     try await Task.sleep(for: .seconds(0.5))
 
     try await turnTheaterLights(.blue, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await Task.sleep(for: .seconds(0.5))
 
     try await turnTheaterLights(.red, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await Task.sleep(for: .seconds(0.5))
 
     try await turnTheaterLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await Task.sleep(for: .seconds(0.5))
 }
 
 private func turnTheaterLights(_ color: TulsaColor, hueUsername: String, hueAccessToken: String, context: LambdaContext) async throws {
@@ -125,7 +128,7 @@ private func turnTheaterLights(_ color: TulsaColor, hueUsername: String, hueAcce
         for lightNumber in [4, 7, 8, 9] { // emma's lamp & theater lights
             group.addTask {
                 let hueBody = buildHueBody(for: color)
-                let url = "https://api.meethue.com/bridge/\(hueUsername)/lights/4/state"
+                let url = "https://api.meethue.com/bridge/\(hueUsername)/lights/\(lightNumber)/state"
 
                 var request = HTTPClientRequest(url: url)
                 request.method = .PUT
@@ -183,11 +186,6 @@ private func buildHueBody(for color: TulsaColor) -> [String: Any] {
     }
 
     return hueBody
-}
-
-struct GameInfo {
-    var currentGame: GameItem
-    var previousGamePeriod: String
 }
 
 enum TulsaColor {
