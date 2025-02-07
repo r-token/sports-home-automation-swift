@@ -1,5 +1,5 @@
 //
-//  GameScoresResponse.swift
+//  NCAAGameScoresResponse.swift
 //  sports-home-automation-swift
 //
 //  Created by Ryan Token on 2/2/25.
@@ -7,7 +7,7 @@
 
 // The response type we get from hitting ncaa-api's /scoreboard endpoint
 
-public struct GameScoresResponse: Codable {
+public struct NCAAGameScoresResponse: Codable {
     let inputMD5Sum: String
     let instanceId: String
     let updated_at: String

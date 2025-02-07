@@ -20,9 +20,14 @@ let runtime = LambdaRuntime { (event: DynamoDBEvent, context: LambdaContext) asy
     for event in event.records {
         guard let gameInfo: GameInfo = parseDynamoEventIntoGameItem(event: event, context: context) else { continue }
 
-        if tulsaWon(gameInfo) {
-            context.logger.info("Tulsa won! Flashing lights...")
-            try await flashTheaterLightsTulsaColors(context: context)
+        if gameInfo.currentGame.sport == "cfb" || gameInfo.currentGame.sport == "nfl" {
+            if myTeamScored(gameInfo) {
+                try await flashLightsAppropriateColors(gameInfo: gameInfo, context: context)
+            }
+        }
+
+        if myTeamWon(gameInfo) {
+            try await flashLightsAppropriateColors(gameInfo: gameInfo, context: context)
         }
     }
 
@@ -46,10 +51,12 @@ private func parseDynamoEventIntoGameItem(event: DynamoDBEvent.EventRecord, cont
 
     guard case .string(let gameId) = newImage["gameId"],
           case .string(let sport) = newImage["sport"],
-          case .number(let tulsaScore) = newImage["tulsaScore"],
-          case .number(let opposingScore) = newImage["opposingScore"],
+          case .string(let myTeam) = newImage["myTeam"],
+          case .number(let myTeamScore) = newImage["myTeamScore"],
+          case .number(let previousMyTeamScore) = oldImage["myTeamScore"],
           case .string(let opposingTeam) = newImage["opposingTeam"],
-          case .string(let oldGamePeriod) = oldImage["gamePeriod"],
+          case .number(let opposingTeamScore) = newImage["opposingTeamScore"],
+          case .string(let previousGamePeriod) = oldImage["gamePeriod"],
           case .string(let gamePeriod) = newImage["gamePeriod"] else {
         context.logger.error("Missing or invalid attributes in DynamoDB record")
         return nil
@@ -58,25 +65,51 @@ private func parseDynamoEventIntoGameItem(event: DynamoDBEvent.EventRecord, cont
     let gameItem = GameItem(
         gameId: gameId,
         sport: sport,
-        tulsaScore: Int(tulsaScore) ?? 0,
-        opposingScore: Int(opposingScore) ?? 0,
+        myTeam: myTeam,
+        myTeamScore: Int(myTeamScore) ?? 0,
         opposingTeam: opposingTeam,
+        opposingTeamScore: Int(opposingTeamScore) ?? 0,
         gamePeriod: gamePeriod
     )
 
-    context.logger.info("Processed gameItem: \(gameItem) and previousGamePeriod as: \(oldGamePeriod)")
-    return GameInfo(currentGame: gameItem, previousGamePeriod: oldGamePeriod)
+    context.logger.info("Processed gameItem: \(gameItem), previousGamePeriod as: \(previousGamePeriod), and previousMyTeamScore as: \(Int(previousMyTeamScore) ?? 0)")
+    return GameInfo(
+        currentGame: gameItem,
+        previousGamePeriod: previousGamePeriod,
+        previousMyTeamScore: Int(previousMyTeamScore) ?? 0
+    )
 }
 
-private func tulsaWon(_ gameInfo: GameInfo) -> Bool {
-    let tulsaScore = gameInfo.currentGame.tulsaScore
-    let opposingScore = gameInfo.currentGame.opposingScore
+private func myTeamScored(_ gameInfo: GameInfo) -> Bool {
+    let oldMyTeamScore = gameInfo.previousMyTeamScore
+    let newMyTeamScore = gameInfo.currentGame.myTeamScore
+
+    return newMyTeamScore > oldMyTeamScore
+}
+
+private func myTeamWon(_ gameInfo: GameInfo) -> Bool {
+    let myTeamScore = gameInfo.currentGame.myTeamScore
+    let opposingTeamScore = gameInfo.currentGame.opposingTeamScore
     let previousGamePeriod = gameInfo.previousGamePeriod
     let currentGamePeriod = gameInfo.currentGame.gamePeriod
 
-    let gameJustEnded = previousGamePeriod != "FINAL" && currentGamePeriod == "FINAL"
+    let gameJustEnded = !previousGamePeriod.contains("FINAL") && currentGamePeriod.contains("FINAL")
 
-    return gameJustEnded && tulsaScore > opposingScore
+    return gameJustEnded && myTeamScore > opposingTeamScore
+}
+
+private func flashLightsAppropriateColors(gameInfo: GameInfo, context: LambdaContext) async throws {
+    switch gameInfo.currentGame.myTeam {
+    case "Tulsa":
+        context.logger.info("Tulsa won! Flashing lights Tulsa colors...")
+        try await flashTheaterLightsTulsaColors(context: context)
+    case "Eagles":
+        context.logger.info("Eagles won! Flashing lights Eagles colors...")
+        try await flashTheaterLightsEaglesColors(context: context)
+    default:
+        context.logger.info("Some other team won? Flashing lights Tulsa colors...")
+        try await flashTheaterLightsTulsaColors(context: context)
+    }
 }
 
 private func flashTheaterLightsTulsaColors(context: LambdaContext) async throws {
@@ -123,7 +156,48 @@ private func flashTheaterLightsTulsaColors(context: LambdaContext) async throws 
     try await Task.sleep(for: .seconds(0.5))
 }
 
-private func turnTheaterLights(_ color: TulsaColor, hueUsername: String, hueAccessToken: String, context: LambdaContext) async throws {
+private func flashTheaterLightsEaglesColors(context: LambdaContext) async throws {
+    guard let hueRemoteUsername = try await getSSMParameterValue(parameterName: "hue-remote-username", context: context) else { return }
+    guard let hueAccessToken = try await getSSMParameterValue(parameterName: "hue-access-token", context: context) else { return }
+
+    try await turnTheaterLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await Task.sleep(for: .seconds(0.5))
+
+    try await turnTheaterLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await Task.sleep(for: .seconds(0.5))
+
+    try await turnTheaterLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await Task.sleep(for: .seconds(0.5))
+
+    try await turnTheaterLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await Task.sleep(for: .seconds(0.5))
+
+    try await turnTheaterLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await Task.sleep(for: .seconds(0.5))
+
+    try await turnTheaterLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await Task.sleep(for: .seconds(0.5))
+
+    try await turnTheaterLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await Task.sleep(for: .seconds(0.5))
+
+    try await turnTheaterLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await Task.sleep(for: .seconds(0.5))
+
+    try await turnTheaterLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await Task.sleep(for: .seconds(0.5))
+
+    try await turnTheaterLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await Task.sleep(for: .seconds(0.5))
+
+    try await turnTheaterLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await Task.sleep(for: .seconds(0.5))
+
+    try await turnTheaterLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await Task.sleep(for: .seconds(0.5))
+}
+
+private func turnTheaterLights(_ color: TeamColor, hueUsername: String, hueAccessToken: String, context: LambdaContext) async throws {
     await withThrowingTaskGroup(of: Void.self) { group in
         for lightNumber in [4, 7, 8, 9] { // emma's lamp & theater lights
             group.addTask {
@@ -158,10 +232,11 @@ private func turnTheaterLights(_ color: TulsaColor, hueUsername: String, hueAcce
     }
 }
 
-private func buildHueBody(for color: TulsaColor) -> [String: Any] {
+private func buildHueBody(for color: TeamColor) -> [String: Any] {
     var hueBody: [String: Any] = [:]
 
     switch color {
+        // Tulsa Colors
     case .gold:
         hueBody = [
             "on": true,
@@ -183,11 +258,31 @@ private func buildHueBody(for color: TulsaColor) -> [String: Any] {
             "sat": 237,
             "bri": 254
         ]
+
+        // Eagles Colors
+    case .midnightGreen:
+        hueBody = [
+            "on": true,
+            "hue": 33660,
+            "sat": 254,
+            "bri": 254
+        ]
+    case .silver:
+        hueBody = [
+            "on": true,
+            "hue": 37145,
+            "sat": 10,
+            "bri": 254
+        ]
     }
 
     return hueBody
 }
 
-enum TulsaColor {
+enum TeamColor {
+    // Tulsa
     case gold, blue, red
+
+    // Eagles
+    case midnightGreen, silver
 }
