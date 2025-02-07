@@ -1,6 +1,6 @@
 # Sports Home Automation with Swift Cloud
 
-Backend serverless IaC on AWS written in Swift and deployed via [Swift Cloud](https://github.com/swift-cloud/swift-cloud).
+Backend serverless IaC on AWS to remotely control my Philips Hue bulbs based on whether my team won or not. Written in Swift and deployed via [Swift Cloud](https://github.com/swift-cloud/swift-cloud).
 
 It currently consists of six primary pieces of infrastructure, all defined within `Infra/Project.swift`:
 1. A cron job managed by EventBridge that triggers my scheduler function
