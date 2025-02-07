@@ -102,102 +102,102 @@ private func flashLightsAppropriateColors(gameInfo: GameInfo, context: LambdaCon
     switch gameInfo.currentGame.myTeam {
     case "Tulsa":
         context.logger.info("Tulsa won! Flashing lights Tulsa colors...")
-        try await flashTheaterLightsTulsaColors(context: context)
+        try await flashLightsTulsaColors(context: context)
     case "Eagles":
         context.logger.info("Eagles won! Flashing lights Eagles colors...")
-        try await flashTheaterLightsEaglesColors(context: context)
+        try await flashLightsEaglesColors(context: context)
     default:
         context.logger.info("Some other team won? Flashing lights Tulsa colors...")
-        try await flashTheaterLightsTulsaColors(context: context)
+        try await flashLightsTulsaColors(context: context)
     }
 }
 
-private func flashTheaterLightsTulsaColors(context: LambdaContext) async throws {
+private func flashLightsTulsaColors(context: LambdaContext) async throws {
     guard let hueRemoteUsername = try await getSSMParameterValue(parameterName: "hue-remote-username", context: context) else { return }
     guard let hueAccessToken = try await getSSMParameterValue(parameterName: "hue-access-token", context: context) else { return }
 
-    try await turnTheaterLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.blue, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.blue, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.red, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.red, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.blue, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.blue, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.red, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.red, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.blue, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.blue, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.red, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.red, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.blue, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.blue, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.red, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.red, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 }
 
-private func flashTheaterLightsEaglesColors(context: LambdaContext) async throws {
+private func flashLightsEaglesColors(context: LambdaContext) async throws {
     guard let hueRemoteUsername = try await getSSMParameterValue(parameterName: "hue-remote-username", context: context) else { return }
     guard let hueAccessToken = try await getSSMParameterValue(parameterName: "hue-access-token", context: context) else { return }
 
-    try await turnTheaterLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 
-    try await turnTheaterLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
+    try await turnLights(.silver, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(0.5))
 }
 
-private func turnTheaterLights(_ color: TeamColor, hueUsername: String, hueAccessToken: String, context: LambdaContext) async throws {
+private func turnLights(_ color: TeamColor, hueUsername: String, hueAccessToken: String, context: LambdaContext) async throws {
     await withThrowingTaskGroup(of: Void.self) { group in
         for lightNumber in [4, 7, 8, 9] { // emma's lamp & theater lights
             group.addTask {
@@ -215,7 +215,6 @@ private func turnTheaterLights(_ color: TeamColor, hueUsername: String, hueAcces
                     buffer.writeBytes(jsonData)
                     request.body = .bytes(buffer)
 
-                    // Make the request
                     let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
 
                     guard (200...299).contains(response.status.code) else {
