@@ -20,7 +20,7 @@ let runtime = LambdaRuntime { (event: DynamoDBEvent, context: LambdaContext) asy
     for event in event.records {
         guard let gameInfo: GameInfo = parseDynamoEventIntoGameItem(event: event, context: context) else { continue }
 
-        if gameInfo.currentGame.sport == "cfb" || gameInfo.currentGame.sport == "nfl" {
+        if isFootballGame(game: gameInfo.currentGame) {
             if myTeamScored(gameInfo) {
                 try await flashLightsAppropriateColors(gameInfo: gameInfo, context: context)
             }
@@ -38,6 +38,10 @@ try await runtime.run()
 
 
 // MARK: ScoreProcessor Utilities
+
+private func isFootballGame(game: GameItem) -> Bool {
+    game.sport == "cfb" || game.sport == "nfl"
+}
 
 private func parseDynamoEventIntoGameItem(event: DynamoDBEvent.EventRecord, context: LambdaContext) -> GameInfo? {
     guard let oldImage = event.change.oldImage else {
