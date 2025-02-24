@@ -2,6 +2,8 @@
 
 Backend serverless IaC on AWS to remotely control my Philips Hue bulbs whenever my favorite sports teams score or win. Written in Swift and deployed via [Swift Cloud](https://github.com/swift-cloud/swift-cloud).
 
+Read the blog post about it [here](https://www.ryantoken.com/blog/serverless-swift).
+
 It currently consists of six primary pieces of infrastructure, all defined within `Infra/Project.swift`:
 1. A cron job managed by EventBridge that triggers my scheduler function
 2. A scheduler Lambda function that fires off SQS events every 10 seconds
