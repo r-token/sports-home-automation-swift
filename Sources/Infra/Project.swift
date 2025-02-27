@@ -44,7 +44,7 @@ struct SportsHomeAutomationSwift: AWSProject {
         let scoreProcessor = AWS.Function(
             "score-processor",
             targetName: "ScoreProcessor",
-            timeout: .seconds(20)
+            timeout: .seconds(60)
         )
 
         pollerCron.invoke(sportsApiScheduler) // cron job triggers the scheduler Lambda
