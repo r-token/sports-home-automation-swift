@@ -231,9 +231,9 @@ private func turnLights(_ color: TeamColor, hueUsername: String, hueAccessToken:
                     context.logger.error("Error updating light \(lightNumber): \(error)")
                 }
             }
-
-            try await group.waitForAll()
         }
+
+        try await group.waitForAll()
     }
 }
 
