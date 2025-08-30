@@ -31,11 +31,14 @@ let runtime = LambdaRuntime { (event: HueTokenRefresherCronJob, context: LambdaC
     if let tokenResponse = try await refreshHueTokens(
         clientId: hueClientId,
         clientSecret: hueClientSecret,
-        refreshToken: hueRefreshToken
+        refreshToken: hueRefreshToken,
+        context: context
     ) {
         try await updateSSMParameters(tokenResponse: tokenResponse)
 
         context.logger.info("Updated hue-access-token and hue-refresh-token in the SSM Parameter Store")
+    } else {
+        context.logger.error("Unable to refresh hue access and refresh tokens")
     }
 
     return true
@@ -51,8 +54,9 @@ private func getHueSSMParams(context: LambdaContext) async throws -> (hueClientI
     return (hueClientId, hueClientSecret, hueRefreshToken)
 }
 
-private func refreshHueTokens(clientId: String, clientSecret: String, refreshToken: String) async throws -> HueTokenResponse? {
-    var request = HTTPClientRequest(url: "https://api.meethue.com/oauth2/refresh?grant_type=refresh_token")
+private func refreshHueTokens(clientId: String, clientSecret: String, refreshToken: String, context: LambdaContext) async throws -> HueTokenResponse? {
+    let url = "https://api.meethue.com/v2/oauth2/token"
+    var request = HTTPClientRequest(url: url)
     request.method = .POST
     request.headers.add(name: "Content-Type", value: "application/x-www-form-urlencoded")
 
@@ -60,20 +64,25 @@ private func refreshHueTokens(clientId: String, clientSecret: String, refreshTok
     let authString = "\(clientId):\(clientSecret)".data(using: .utf8)!.base64EncodedString()
     request.headers.add(name: "Authorization", value: "Basic \(authString)")
 
-    // Create form body
+    let formData = "grant_type=refresh_token&refresh_token=\(refreshToken)"
     var buffer = ByteBuffer()
-    buffer.writeString("refresh_token=\(refreshToken)")
+    buffer.writeString(formData)
     request.body = .bytes(buffer)
 
     let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
-
-    guard (200...299).contains(response.status.code) else {
-        return nil
-    }
-
     let body = try await response.body.collect(upTo: 1024 * 1024)
     let data = Data(body.readableBytesView)
 
-    let tokenResponse = try JSONDecoder().decode(HueTokenResponse.self, from: data)
-    return tokenResponse
+    guard (200...299).contains(response.status.code) else {
+        context.logger.error("Error: received response code of \(response.status.code)")
+        return nil
+    }
+
+    do {
+        let tokenResponse = try JSONDecoder().decode(HueTokenResponse.self, from: data)
+        return tokenResponse
+    } catch {
+        context.logger.error("JSON decode error: \(error)")
+        return nil
+    }
 }
