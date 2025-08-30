@@ -203,7 +203,7 @@ private func flashLightsEaglesColors(context: LambdaContext) async throws {
 
 private func turnLights(_ color: TeamColor, hueUsername: String, hueAccessToken: String, context: LambdaContext) async throws {
     try await withThrowingTaskGroup(of: Void.self) { group in
-        for lightNumber in [1, 3, 4, 16] { // both front room lamps and both big lamp bulbs
+        for lightNumber in [1, 3, 4, 16, 24] { // both front room lamps, both big lamp bulbs, and the tv lightstrip
             group.addTask {
                 let hueBody = buildHueBody(for: color)
                 let url = "https://api.meethue.com/bridge/\(hueUsername)/lights/\(lightNumber)/state"
