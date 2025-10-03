@@ -13,7 +13,8 @@ let package = Package(
         .library(name: "SSMUtils", targets: ["SSMUtils"])
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-cloud/swift-cloud.git", branch: "main"),
+        .package(url: "https://github.com/natanrolnik/swift-cloud.git", branch: "unblock"),
+		.package(url: "https://github.com/Kolos65/Mockable.git", branch: "main"),
         .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime.git", branch: "main"),
         .package(url: "https://github.com/swift-server/swift-aws-lambda-events", branch: "main"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.0.0"),
@@ -93,3 +94,9 @@ let package = Package(
         )
     ]
 )
+
+for target in package.targets {
+	var settings = target.swiftSettings ?? []
+	settings.append(.enableUpcomingFeature("StrictConcurrency"))
+	target.swiftSettings = settings
+}

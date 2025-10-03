@@ -30,7 +30,7 @@ let runtime = LambdaRuntime { (event: SQSEvent, context: LambdaContext) async th
 
     if isFootballSeason {
         // Check active NCAA and NFL scores for Tulsa and/or Eagles football games
-        try await withThrowingTaskGroup(of: Void.self) { group in
+        try await withThrowingTaskGroup { group in
             group.addTask {
                 context.logger.info("Checking ncaa football scores...")
                 let ncaaFootballScores = try await getNCAAScores(url: ncaaFootballScoresUrl, sport: .cfb, context: context)
@@ -63,7 +63,7 @@ let runtime = LambdaRuntime { (event: SQSEvent, context: LambdaContext) async th
 
     if isBasketballSeason {
         // Check active NCAA scores for Tulsa men's & women's basketball games
-        try await withThrowingTaskGroup(of: Void.self) { group in
+        try await withThrowingTaskGroup { group in
             group.addTask {
                 context.logger.info("Checking basketball scores...")
                 if let mensBasketballScores = try await getNCAAScores(url: mensBasketballScoresUrl, sport: .mbb, context: context) {

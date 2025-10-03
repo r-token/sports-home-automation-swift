@@ -4,6 +4,16 @@ Backend serverless IaC on AWS to remotely control my Philips Hue bulbs whenever 
 
 Read the blog post about it [here](https://www.ryantoken.com/blog/serverless-swift).
 
+## Commands
+
+**Deploy**: `swift run Infra deploy --stage prod`
+**Remove**: `swift run Infra remove --stage prod`
+**Preview**: `swift run Infra preview --stage prod`
+**Outputs**: `swift run Infra outputs --stage prod`
+**Cancel**: `swift run Infra cancel --stage prod`
+
+## Infrastructure
+
 It currently consists of six primary pieces of infrastructure, all defined within `Infra/Project.swift`:
 1. A cron job managed by EventBridge that triggers my scheduler function
 2. A scheduler Lambda function that fires off SQS events every 10 seconds

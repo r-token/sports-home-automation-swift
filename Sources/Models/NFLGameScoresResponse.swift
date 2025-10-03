@@ -86,8 +86,9 @@ public struct Venue: Codable {
 }
 
 public struct Address: Codable {
-    public let city: String
-    public let state: String
+	public let city: String
+	public let state: String?
+	public let country: String?
 }
 
 public struct Competitor: Codable {
