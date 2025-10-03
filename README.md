@@ -6,11 +6,11 @@ Read the blog post about it [here](https://www.ryantoken.com/blog/serverless-swi
 
 ## Commands
 
-**Deploy**: `swift run Infra deploy --stage prod`
-**Remove**: `swift run Infra remove --stage prod`
-**Preview**: `swift run Infra preview --stage prod`
-**Outputs**: `swift run Infra outputs --stage prod`
-**Cancel**: `swift run Infra cancel --stage prod`
+* **Deploy**: `swift run Infra deploy --stage prod`
+* **Remove**: `swift run Infra remove --stage prod`
+* **Preview**: `swift run Infra preview --stage prod`
+* **Outputs**: `swift run Infra outputs --stage prod`
+* **Cancel**: `swift run Infra cancel --stage prod`
 
 ## Infrastructure
 
