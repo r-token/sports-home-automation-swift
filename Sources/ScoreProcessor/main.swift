@@ -106,13 +106,13 @@ private func myTeamWon(_ gameInfo: GameInfo) -> Bool {
 private func flashLightsAppropriateColors(gameInfo: GameInfo, context: LambdaContext) async throws {
     switch gameInfo.currentGame.myTeam {
     case "Tulsa":
-        context.logger.info("Tulsa won! Flashing lights Tulsa colors...")
+        context.logger.info("Tulsa won or scored! Flashing lights Tulsa colors...")
         try await flashLightsTulsaColors(context: context)
     case "Eagles":
-        context.logger.info("Eagles won! Flashing lights Eagles colors...")
+        context.logger.info("Eagles won or scored! Flashing lights Eagles colors...")
         try await flashLightsEaglesColors(context: context)
     default:
-        context.logger.info("Some other team won? Flashing lights Tulsa colors...")
+        context.logger.info("Some other team won or scored? Flashing lights Tulsa colors anyway...")
         try await flashLightsTulsaColors(context: context)
     }
 }
