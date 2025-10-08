@@ -89,7 +89,8 @@ private func myTeamScored(_ gameInfo: GameInfo) -> Bool {
     let oldMyTeamScore = gameInfo.previousMyTeamScore
     let newMyTeamScore = gameInfo.currentGame.myTeamScore
 
-    return newMyTeamScore > oldMyTeamScore
+	// exclude extra points
+	return newMyTeamScore - oldMyTeamScore > 1
 }
 
 private func myTeamWon(_ gameInfo: GameInfo) -> Bool {
