@@ -32,7 +32,7 @@ let runtime = LambdaRuntime { (event: SQSEvent, context: LambdaContext) async th
         // Check active NCAA and NFL scores for Tulsa and/or Eagles football games
         try await withThrowingTaskGroup { group in
             group.addTask {
-                context.logger.info("Checking ncaa football scores...")
+                context.logger.info("Checking NCAA football scores...")
                 let ncaaFootballScores = try await getNCAAScores(url: ncaaFootballScoresUrl, sport: .cfb, context: context)
                 if let ncaaFootballScores {
                     if let tulsaFootballGame = getTulsaGameFromAPI(ncaaScores: ncaaFootballScores) {
@@ -45,7 +45,7 @@ let runtime = LambdaRuntime { (event: SQSEvent, context: LambdaContext) async th
             }
 
             group.addTask {
-                context.logger.info("Checking nfl football scores...")
+                context.logger.info("Checking NFL football scores...")
                 let nflScores = try await getNFLScores(url: nflScoresUrl, context: context)
                 if let nflScores {
                     if let eaglesGame: Event = getEaglesGameFromAPI(nflScores: nflScores) {
@@ -65,7 +65,7 @@ let runtime = LambdaRuntime { (event: SQSEvent, context: LambdaContext) async th
         // Check active NCAA scores for Tulsa men's & women's basketball games
         try await withThrowingTaskGroup { group in
             group.addTask {
-                context.logger.info("Checking basketball scores...")
+                context.logger.info("Checking NCAA basketball scores...")
                 if let mensBasketballScores = try await getNCAAScores(url: mensBasketballScoresUrl, sport: .mbb, context: context) {
                     if let tulsaMbbGame = getTulsaGameFromAPI(ncaaScores: mensBasketballScores) {
                         context.logger.info("Found Tulsa men's basketball game: \(tulsaMbbGame.title)")

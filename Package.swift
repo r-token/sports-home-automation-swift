@@ -1,11 +1,11 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "sports-home-automation-swift",
-    platforms: [.macOS(.v15)],
+	platforms: [.macOS(.v26)],
     products: [
         .library(name: "Models", targets: ["Models"]),
         .library(name: "Extensions", targets: ["Extensions"]),
@@ -13,8 +13,7 @@ let package = Package(
         .library(name: "SSMUtils", targets: ["SSMUtils"])
     ],
     dependencies: [
-        .package(url: "https://github.com/natanrolnik/swift-cloud.git", branch: "unblock"),
-		.package(url: "https://github.com/Kolos65/Mockable.git", branch: "main"),
+        .package(url: "https://github.com/swift-cloud/swift-cloud.git", branch: "main"),
         .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime.git", branch: "main"),
         .package(url: "https://github.com/swift-server/swift-aws-lambda-events", branch: "main"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.0.0"),
