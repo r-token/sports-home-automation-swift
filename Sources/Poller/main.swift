@@ -181,9 +181,7 @@ private func getEaglesGameFromAPI(nflScores: NFLGameScoresResponse) -> Event? {
 
 private func writeNCAAGameStatusToDynamoDB(tulsaGame: Game, sport: Sport, context: LambdaContext) async throws {
     let scoresTableName = Cloud.env("DYNAMODB_SCORES_NAME")
-    let ddbConfig = try await DynamoDBClient.DynamoDBClientConfiguration(
-        region: "us-east-1"
-    )
+    let ddbConfig = try await DynamoDBClient.DynamoDBClientConfig(region: "us-east-1")
     let ddbClient = DynamoDBClient(config: ddbConfig)
 
     let homeTeam = tulsaGame.home.names.short
@@ -238,9 +236,7 @@ private func writeNCAAGameStatusToDynamoDB(tulsaGame: Game, sport: Sport, contex
 
 private func writeNFLGameStatusToDynamoDB(eaglesGame: Event, context: LambdaContext) async throws {
     let scoresTableName = Cloud.env("DYNAMODB_SCORES_NAME")
-    let ddbConfig = try await DynamoDBClient.DynamoDBClientConfiguration(
-        region: "us-east-1"
-    )
+    let ddbConfig = try await DynamoDBClient.DynamoDBClientConfig(region: "us-east-1")
     let ddbClient = DynamoDBClient(config: ddbConfig)
 
     let competition = eaglesGame.competitions.first

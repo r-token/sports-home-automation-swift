@@ -10,7 +10,7 @@ import AWSLambdaRuntime
 import Models
 
 public func getSSMParameterValue(parameterName: String, context: LambdaContext) async throws -> String? {
-    let config = try await SSMClient.SSMClientConfiguration(region: "us-east-1")
+    let config = try await SSMClient.SSMClientConfig(region: "us-east-1")
     let ssmClient = SSMClient(config: config)
     let input = GetParameterInput(name: parameterName)
 
@@ -30,7 +30,7 @@ public func getSSMParameterValue(parameterName: String, context: LambdaContext) 
 }
 
 public func updateSSMParameters(tokenResponse: HueTokenResponse) async throws {
-    let ssmClient = SSMClient(config: try await SSMClient.SSMClientConfiguration(region: "us-east-1"))
+    let ssmClient = SSMClient(config: try await SSMClient.SSMClientConfig(region: "us-east-1"))
 
     let accessTokenInput = PutParameterInput(
         name: "hue-access-token",

@@ -25,7 +25,7 @@ let runtime = LambdaRuntime { (event: SportsApiCronJob, context: LambdaContext) 
     }
 
     let queueUrl = Cloud.env("QUEUE_SPORTS_API_POLLER_QUEUE_URL")
-    let config = try await SQSClient.SQSClientConfiguration(region: "us-east-1")
+    let config = try await SQSClient.SQSClientConfig(region: "us-east-1")
     let sqsClient = SQSClient(config: config)
 
     for i in 0..<6 {
