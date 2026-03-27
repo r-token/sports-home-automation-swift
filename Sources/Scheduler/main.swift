@@ -7,14 +7,17 @@
 
 import AWSLambdaRuntime
 import AWSLambdaEvents
-import AWSSQS
 import CloudSDK
 import Foundation
 import SharedUtils
+import SotoSQS
 
 struct SportsApiCronJob: CloudwatchDetail {
     static let name = "sports-api-cron-job"
 }
+
+let client = AWSClient()
+let sqs = SQS(client: client, region: .useast1)
 
 let runtime = LambdaRuntime { (event: SportsApiCronJob, context: LambdaContext) async throws -> Bool in
     context.logger.info("Received cron event: \(event)")
@@ -24,19 +27,20 @@ let runtime = LambdaRuntime { (event: SportsApiCronJob, context: LambdaContext) 
         return false
     }
 
-    let queueUrl = Cloud.env("QUEUE_SPORTS_API_POLLER_QUEUE_URL")
-    let config = try await SQSClient.SQSClientConfig(region: "us-east-1")
-    let sqsClient = SQSClient(config: config)
+    guard let queueUrl = Cloud.env("QUEUE_SPORTS_API_POLLER_QUEUE_URL") else {
+        context.logger.error("QUEUE_SPORTS_API_POLLER_QUEUE_URL environment variable not set")
+        return false
+    }
 
     for i in 0..<6 {
-        let input = SendMessageInput(
+        let input = SQS.SendMessageRequest(
             delaySeconds: i*10,
             messageBody: "Check sports scores",
             queueUrl: queueUrl
         )
 
         do {
-            let response = try await sqsClient.sendMessage(input: input)
+            let response = try await sqs.sendMessage(input)
             context.logger.info("Sent message with delay of \(i * 10) seconds: \(response)")
         } catch {
             context.logger.error("Failed to send message: \(error)")
@@ -48,3 +52,4 @@ let runtime = LambdaRuntime { (event: SportsApiCronJob, context: LambdaContext) 
 }
 
 try await runtime.run()
+try await client.shutdown()

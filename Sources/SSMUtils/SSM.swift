@@ -5,19 +5,15 @@
 //  Created by Ryan Token on 2/5/25.
 //
 
-import AWSSSM
 import AWSLambdaRuntime
 import Models
+import SotoSSM
 
-public func getSSMParameterValue(parameterName: String, context: LambdaContext) async throws -> String? {
-    let config = try await SSMClient.SSMClientConfig(region: "us-east-1")
-    let ssmClient = SSMClient(config: config)
-    let input = GetParameterInput(name: parameterName)
-
+public func getSSMParameterValue(parameterName: String, ssm: SSM, context: LambdaContext) async throws -> String? {
     do {
-        let response = try await ssmClient.getParameter(input: input)
+        let response = try await ssm.getParameter(.init(name: parameterName))
         guard let parameterValue = response.parameter?.value else {
-            context.logger.error("Parameter value for \(input.name ?? "nil") is nil")
+            context.logger.error("Parameter value for \(parameterName) is nil")
             return nil
         }
 
@@ -29,23 +25,18 @@ public func getSSMParameterValue(parameterName: String, context: LambdaContext) 
     }
 }
 
-public func updateSSMParameters(tokenResponse: HueTokenResponse) async throws {
-    let ssmClient = SSMClient(config: try await SSMClient.SSMClientConfig(region: "us-east-1"))
-
-    let accessTokenInput = PutParameterInput(
+public func updateSSMParameters(tokenResponse: HueTokenResponse, ssm: SSM) async throws {
+    _ = try await ssm.putParameter(.init(
         name: "hue-access-token",
         overwrite: true,
         type: .string,
         value: tokenResponse.access_token
-    )
+    ))
 
-    let refreshTokenInput = PutParameterInput(
+    _ = try await ssm.putParameter(.init(
         name: "hue-refresh-token",
         overwrite: true,
         type: .string,
         value: tokenResponse.refresh_token
-    )
-
-    _ = try await ssmClient.putParameter(input: accessTokenInput)
-    _ = try await ssmClient.putParameter(input: refreshTokenInput)
+    ))
 }

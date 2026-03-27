@@ -12,8 +12,12 @@ import Foundation
 import Models
 import NIOCore
 import SSMUtils
+import SotoSSM
 
 let delayAmount: Double = 0.25
+
+let awsClient = AWSClient()
+let ssm = SSM(client: awsClient, region: .useast1)
 
 let runtime = LambdaRuntime { (event: DynamoDBEvent, context: LambdaContext) async throws -> Bool in
     context.logger.info("Received DynamoDB event: \(event)")
@@ -36,6 +40,7 @@ let runtime = LambdaRuntime { (event: DynamoDBEvent, context: LambdaContext) asy
 }
 
 try await runtime.run()
+try await awsClient.shutdown()
 
 
 // MARK: ScoreProcessor Utilities
@@ -119,8 +124,8 @@ private func flashLightsAppropriateColors(gameInfo: GameInfo, context: LambdaCon
 }
 
 private func flashLightsTulsaColors(context: LambdaContext) async throws {
-    guard let hueRemoteUsername = try await getSSMParameterValue(parameterName: "hue-remote-username", context: context) else { return }
-    guard let hueAccessToken = try await getSSMParameterValue(parameterName: "hue-access-token", context: context) else { return }
+    guard let hueRemoteUsername = try await getSSMParameterValue(parameterName: "hue-remote-username", ssm: ssm, context: context) else { return }
+    guard let hueAccessToken = try await getSSMParameterValue(parameterName: "hue-access-token", ssm: ssm, context: context) else { return }
 
     try await turnLights(.gold, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(delayAmount))
@@ -184,8 +189,8 @@ private func flashLightsTulsaColors(context: LambdaContext) async throws {
 }
 
 private func flashLightsEaglesColors(context: LambdaContext) async throws {
-    guard let hueRemoteUsername = try await getSSMParameterValue(parameterName: "hue-remote-username", context: context) else { return }
-    guard let hueAccessToken = try await getSSMParameterValue(parameterName: "hue-access-token", context: context) else { return }
+    guard let hueRemoteUsername = try await getSSMParameterValue(parameterName: "hue-remote-username", ssm: ssm, context: context) else { return }
+    guard let hueAccessToken = try await getSSMParameterValue(parameterName: "hue-access-token", ssm: ssm, context: context) else { return }
 
     try await turnLights(.midnightGreen, hueUsername: hueRemoteUsername, hueAccessToken: hueAccessToken, context: context)
     try await Task.sleep(for: .seconds(delayAmount))

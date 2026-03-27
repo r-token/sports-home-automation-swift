@@ -8,15 +8,18 @@
 import AsyncHTTPClient
 import AWSLambdaEvents
 import AWSLambdaRuntime
-import AWSSSM
 import Foundation
 import Models
 import NIOCore
+import SotoSSM
 import SSMUtils
 
 struct HueTokenRefresherCronJob: CloudwatchDetail {
     static let name = "hue-token-refresher-cron-job"
 }
+
+let awsClient = AWSClient()
+let ssm = SSM(client: awsClient, region: .useast1)
 
 let runtime = LambdaRuntime { (event: HueTokenRefresherCronJob, context: LambdaContext) async throws -> Bool in
     context.logger.info("Received cron event: \(event)")
@@ -34,7 +37,7 @@ let runtime = LambdaRuntime { (event: HueTokenRefresherCronJob, context: LambdaC
         refreshToken: hueRefreshToken,
         context: context
     ) {
-        try await updateSSMParameters(tokenResponse: tokenResponse)
+        try await updateSSMParameters(tokenResponse: tokenResponse, ssm: ssm)
 
         context.logger.info("Updated hue-access-token and hue-refresh-token in the SSM Parameter Store")
     } else {
@@ -45,11 +48,12 @@ let runtime = LambdaRuntime { (event: HueTokenRefresherCronJob, context: LambdaC
 }
 
 try await runtime.run()
+try await awsClient.shutdown()
 
 private func getHueSSMParams(context: LambdaContext) async throws -> (hueClientId: String, hueClientSecret: String, hueRefreshToken: String)? {
-    guard let hueClientId = try await getSSMParameterValue(parameterName: "hue-client-id", context: context) else { return nil }
-    guard let hueClientSecret = try await getSSMParameterValue(parameterName: "hue-client-secret", context: context) else { return nil }
-    guard let hueRefreshToken = try await getSSMParameterValue(parameterName: "hue-refresh-token", context: context) else { return nil }
+    guard let hueClientId = try await getSSMParameterValue(parameterName: "hue-client-id", ssm: ssm, context: context) else { return nil }
+    guard let hueClientSecret = try await getSSMParameterValue(parameterName: "hue-client-secret", ssm: ssm, context: context) else { return nil }
+    guard let hueRefreshToken = try await getSSMParameterValue(parameterName: "hue-refresh-token", ssm: ssm, context: context) else { return nil }
 
     return (hueClientId, hueClientSecret, hueRefreshToken)
 }

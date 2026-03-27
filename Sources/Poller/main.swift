@@ -6,13 +6,16 @@
 //
 
 import AsyncHTTPClient
-import AWSDynamoDB
 import AWSLambdaRuntime
 import AWSLambdaEvents
 import CloudSDK
 import Foundation
 import Models
 import SharedUtils
+import SotoDynamoDB
+
+let awsClient = AWSClient()
+let dynamodb = DynamoDB(client: awsClient, region: .useast1)
 
 let runtime = LambdaRuntime { (event: SQSEvent, context: LambdaContext) async throws -> Bool in
     context.logger.info("Received SQS event: \(event)")
@@ -95,6 +98,7 @@ let runtime = LambdaRuntime { (event: SQSEvent, context: LambdaContext) async th
 }
 
 try await runtime.run()
+try await awsClient.shutdown()
 
 
 // MARK: Poller Utilities
@@ -180,9 +184,10 @@ private func getEaglesGameFromAPI(nflScores: NFLGameScoresResponse) -> Event? {
 }
 
 private func writeNCAAGameStatusToDynamoDB(tulsaGame: Game, sport: Sport, context: LambdaContext) async throws {
-    let scoresTableName = Cloud.env("DYNAMODB_SCORES_NAME")
-    let ddbConfig = try await DynamoDBClient.DynamoDBClientConfig(region: "us-east-1")
-    let ddbClient = DynamoDBClient(config: ddbConfig)
+    guard let scoresTableName = Cloud.env("DYNAMODB_SCORES_NAME") else {
+        context.logger.error("DYNAMODB_SCORES_NAME environment variable not set")
+        return
+    }
 
     let homeTeam = tulsaGame.home.names.short
 
@@ -210,7 +215,7 @@ private func writeNCAAGameStatusToDynamoDB(tulsaGame: Game, sport: Sport, contex
     )
     context.logger.info("NCAA GameItem created as \(gameItem)")
 
-    let dynamoItem: [String: DynamoDBClientTypes.AttributeValue] = [
+    let dynamoItem: [String: DynamoDB.AttributeValue] = [
         "gameId": .s(gameItem.gameId),
         "sport": .s(gameItem.sport),
         "myTeam": .s(gameItem.myTeam),
@@ -221,13 +226,13 @@ private func writeNCAAGameStatusToDynamoDB(tulsaGame: Game, sport: Sport, contex
     ]
     context.logger.info("NCAA DynamoItem created as \(dynamoItem)")
 
-    let ddbInput = PutItemInput(
+    let ddbInput = DynamoDB.PutItemInput(
         item: dynamoItem,
         tableName: scoresTableName
     )
 
     do {
-        _ = try await ddbClient.putItem(input: ddbInput)
+        _ = try await dynamodb.putItem(ddbInput)
         context.logger.info("Successfully wrote game info to DynamoDB")
     } catch {
         context.logger.error("Error writing game info to DynamoDB: \(error)")
@@ -235,9 +240,10 @@ private func writeNCAAGameStatusToDynamoDB(tulsaGame: Game, sport: Sport, contex
 }
 
 private func writeNFLGameStatusToDynamoDB(eaglesGame: Event, context: LambdaContext) async throws {
-    let scoresTableName = Cloud.env("DYNAMODB_SCORES_NAME")
-    let ddbConfig = try await DynamoDBClient.DynamoDBClientConfig(region: "us-east-1")
-    let ddbClient = DynamoDBClient(config: ddbConfig)
+    guard let scoresTableName = Cloud.env("DYNAMODB_SCORES_NAME") else {
+        context.logger.error("DYNAMODB_SCORES_NAME environment variable not set")
+        return
+    }
 
     let competition = eaglesGame.competitions.first
     let homeCompetitor = competition?.competitors.first(where: { $0.homeAway == "home" })
@@ -268,7 +274,7 @@ private func writeNFLGameStatusToDynamoDB(eaglesGame: Event, context: LambdaCont
     )
     context.logger.info("NFL GameItem created as \(gameItem)")
 
-    let dynamoItem: [String: DynamoDBClientTypes.AttributeValue] = [
+    let dynamoItem: [String: DynamoDB.AttributeValue] = [
         "gameId": .s(gameItem.gameId),
         "sport": .s(gameItem.sport),
         "myTeam": .s(gameItem.myTeam),
@@ -279,13 +285,13 @@ private func writeNFLGameStatusToDynamoDB(eaglesGame: Event, context: LambdaCont
     ]
     context.logger.info("NFL DynamoItem created as \(dynamoItem)")
 
-    let ddbInput = PutItemInput(
+    let ddbInput = DynamoDB.PutItemInput(
         item: dynamoItem,
         tableName: scoresTableName
     )
 
     do {
-        _ = try await ddbClient.putItem(input: ddbInput)
+        _ = try await dynamodb.putItem(ddbInput)
         context.logger.info("Successfully wrote game info to DynamoDB")
     } catch {
         context.logger.error("Error writing game info to DynamoDB: \(error)")

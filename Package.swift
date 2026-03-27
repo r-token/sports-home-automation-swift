@@ -17,7 +17,7 @@ let package = Package(
         .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime.git", branch: "main"),
         .package(url: "https://github.com/swift-server/swift-aws-lambda-events", branch: "main"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.0.0"),
-        .package(url: "https://github.com/awslabs/aws-sdk-swift.git", branch: "main")
+        .package(url: "https://github.com/soto-project/soto.git", from: "7.0.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -39,7 +39,7 @@ let package = Package(
             dependencies: [
                 "Models",
                 .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
-                .product(name: "AWSSSM", package: "aws-sdk-swift")
+                .product(name: "SotoSSM", package: "soto")
             ]
         ),
         .executableTarget(
@@ -55,7 +55,7 @@ let package = Package(
                 .product(name: "CloudSDK", package: "swift-cloud"),
                 .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
                 .product(name: "AWSLambdaEvents", package: "swift-aws-lambda-events"),
-                .product(name: "AWSSQS", package: "aws-sdk-swift")
+                .product(name: "SotoSQS", package: "soto")
             ]
         ),
         .executableTarget(
@@ -66,7 +66,7 @@ let package = Package(
                 .product(name: "CloudSDK", package: "swift-cloud"),
                 .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
                 .product(name: "AWSLambdaEvents", package: "swift-aws-lambda-events"),
-                .product(name: "AWSDynamoDB", package: "aws-sdk-swift"),
+                .product(name: "SotoDynamoDB", package: "soto"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client")
             ]
         ),
@@ -77,7 +77,7 @@ let package = Package(
                 "SSMUtils",
                 .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
                 .product(name: "AWSLambdaEvents", package: "swift-aws-lambda-events"),
-                .product(name: "AWSSSM", package: "aws-sdk-swift"),
+                .product(name: "SotoSSM", package: "soto"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client")
             ]
         ),
@@ -87,15 +87,24 @@ let package = Package(
                 "SSMUtils",
                 .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
                 .product(name: "AWSLambdaEvents", package: "swift-aws-lambda-events"),
-                .product(name: "AWSSSM", package: "aws-sdk-swift"),
+                .product(name: "SotoSSM", package: "soto"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client")
             ]
         )
     ]
 )
 
+let lambdaTargets: Set<String> = ["Scheduler", "Poller", "ScoreProcessor", "HueTokenRefresher"]
+
 for target in package.targets {
 	var settings = target.swiftSettings ?? []
 	settings.append(.enableUpcomingFeature("StrictConcurrency"))
 	target.swiftSettings = settings
+
+	// Strip symbols from Lambda binaries to reduce zip size for deployment
+	if lambdaTargets.contains(target.name) {
+		var linkerSettings = target.linkerSettings ?? []
+		linkerSettings.append(.unsafeFlags(["-Xlinker", "--strip-all"], .when(platforms: [.linux])))
+		target.linkerSettings = linkerSettings
+	}
 }
