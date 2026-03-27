@@ -24,11 +24,11 @@ All infrastructure is defined in `Sources/Infra/Project.swift` and deployed to A
 
 ### Prerequisites
 
-This project deploys without Docker using the [Swift Static Linux SDK](https://www.swift.org/documentation/articles/static-linux-getting-started.html) for cross-compilation from macOS to Linux.
+This project deploys without Docker using the [Swift Static Linux SDK](https://www.swift.org/install/macos/#swift-sdk-bundles) for cross-compilation from macOS to Linux.
 
 **1. Install Swiftly (Swift toolchain manager)**
 
-The Static Linux SDK requires the open-source Swift toolchain from swift.org, not the one bundled with Xcode. [Swiftly](https://swiftly.dev/) manages this:
+The Static Linux SDK requires the open-source Swift toolchain from swift.org, not the one bundled with Xcode. [Swiftly](https://www.swift.org/install/macos/) manages this:
 
 ```bash
 curl -O https://download.swift.org/swiftly/darwin/swiftly.pkg && \
