@@ -24,7 +24,8 @@ struct SportsHomeAutomationSwift: AWSProject {
         let sportsApiScheduler = AWS.Function(
             "sports-api-scheduler",
             targetName: "Scheduler",
-			build: .staticLinuxSDK
+			build: .staticLinuxSDK,
+			buildOptions: .stripSymbols
         )
 
         let sportsApiPollerQueue = AWS.Queue("sports-api-poller-queue")
@@ -32,7 +33,8 @@ struct SportsHomeAutomationSwift: AWSProject {
         let sportsApiPoller = AWS.Function(
             "sports-api-poller-function",
             targetName: "Poller",
-			build: .staticLinuxSDK
+			build: .staticLinuxSDK,
+			buildOptions: .stripSymbols
         )
 
         let scoresTable = AWS.DynamoDB(
@@ -47,7 +49,8 @@ struct SportsHomeAutomationSwift: AWSProject {
             "score-processor",
             targetName: "ScoreProcessor",
             timeout: .seconds(60),
-			build: .staticLinuxSDK
+			build: .staticLinuxSDK,
+			buildOptions: .stripSymbols
         )
 
         pollerCron.invoke(sportsApiScheduler) // cron job triggers the scheduler Lambda
@@ -80,7 +83,8 @@ struct SportsHomeAutomationSwift: AWSProject {
         let hueTokenRefresherFunction = AWS.Function(
             "hue-token-refresher",
             targetName: "HueTokenRefresher",
-			build: .staticLinuxSDK
+			build: .staticLinuxSDK,
+			buildOptions: .stripSymbols
         )
 
         hueTokenRefresherCron.invoke(hueTokenRefresherFunction) // cron job triggers the hue token refresher

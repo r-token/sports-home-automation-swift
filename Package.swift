@@ -93,18 +93,3 @@ let package = Package(
         )
     ]
 )
-
-let lambdaTargets: Set<String> = ["Scheduler", "Poller", "ScoreProcessor", "HueTokenRefresher"]
-
-for target in package.targets {
-	var settings = target.swiftSettings ?? []
-	settings.append(.enableUpcomingFeature("StrictConcurrency"))
-	target.swiftSettings = settings
-
-	// Strip symbols from Lambda binaries to reduce zip size for deployment
-	if lambdaTargets.contains(target.name) {
-		var linkerSettings = target.linkerSettings ?? []
-		linkerSettings.append(.unsafeFlags(["-Xlinker", "--strip-all"], .when(platforms: [.linux])))
-		target.linkerSettings = linkerSettings
-	}
-}
